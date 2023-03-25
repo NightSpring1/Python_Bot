@@ -1,73 +1,82 @@
+import re
 from collections import UserDict
 
 
-class Field:
+class Name:
     def __init__(self, value):
+        self.__value = None
         self.value = value
 
+    @property
+    def value(self):
+        return self.__value
 
-class Name(Field):
+    @value.setter
+    def value(self, value: str):
+        if value.isalpha() and len(value) in range(2, 16):
+            self.__value = value.capitalize()
+        else:
+            raise ValueError  # invalid name
+
+
+class Phone:
     def __init__(self, value):
-        super().__init__(value)
+        self.__value = None
+        self.value = value
 
-    def is_valid_name(self):
-        return True if self.value.isalpha() else False
+    @property
+    def value(self):
+        return self.__value
 
-
-class Phone(Field):
-    def __init__(self, value):
-        super().__init__(value)
-
-    def is_valid_phone(self):
-        is_valid = True if self.value.isnumeric() else False
-        return is_valid
+    @value.setter
+    def value(self, value: str):
+        if len(value) >= 9:
+            value = '+380' + ''.join(re.findall(r"[0-9]", value))[-9:]
+            self.__value = value
+        else:
+            raise ValueError  # phone has not enough digits
 
 
 class Record:
-    def __init__(self, name: Name, phone: Phone):
-        self.name = name
-        self.phones = set()
+    def __init__(self, name: Name, phone: Phone = None):
+        self.__name = name
+        self.__phones = set()
+        self.phones = phone
         self.birthday = None
-        self.phones.add(phone)
 
-    def add_phone(self, phone) -> str:
-        message = "Phone was added."
-        self.phones.add(phone)
-        return message
+    @property
+    def name(self):
+        return self.__name
 
-    def change_phone(self, phone: Phone, new_phone: Phone) -> str:
-        message = 'Phone was not found in this record.'
-        for i in self.phones:
-            if i.value == phone.value:
-                self.phones.remove(i)
-                self.phones.add(new_phone)
-                message = 'Phone has been changed.'
+    @property
+    def phones(self):
+        return set(map(lambda x: x.value, self.__phones))
+
+    @phones.setter
+    def phones(self, phone: Phone):
+        if phone is None:
+            pass
+        elif phone.value not in self.phones:
+            self.__phones.add(phone)
+        else:
+            raise ValueError  # phone already exists
+
+    def __delitem__(self, key: Phone):
+        for phone in self.__phones:
+            if phone.value == key.value:
+                self.__phones.remove(phone)
                 break
-        return message
-
-    def delete_phone(self, phone: Phone) -> str:
-        message = 'Phone was not removed because it was not found.'
-        for i in self.phones:
-            if i.value == phone.value:
-                self.phones.remove(i)
-                message = "phone deleted"
-                break
-        return message
 
 
 class AddressBook(UserDict):
-    def add_record(self, record) -> str:
+    def add_record(self, record: Record):
         self.data[record.name.value] = record
-        message = 'Record added into address book!'
-        return message
 
-    def del_record(self, name) -> str:
-        self.data.pop(name)
-        message = 'Record deleted from address book.'
-        return message
+    def del_record(self, name):
+        del self.data[name]
 
-    def show_all_records(self) -> str:
-        message = f'\nRecords in address book:\n'
-        for rec_id, record in self.data.items():
-            message += f'{record.name.value}: {", ".join([phone.value for phone in record.phones])}\n'
-        return message
+    def show_records(self) -> str:
+        records = []
+        for record in self.data.values():
+            records.append(f'{record.name.value}:\t{", ".join(record.phones)}.')
+        return '\n'.join(records)
