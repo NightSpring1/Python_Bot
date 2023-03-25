@@ -7,6 +7,8 @@ def main() -> None:
     my_address_book = AddressBook()
     while True:
         input_string = input('Enter Command: ').strip().lstrip()
+        if not len(input_string):
+            continue
         command = input_string.split()[0].lower()
         arguments = input_string.split()[1:]
 
