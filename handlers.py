@@ -6,11 +6,11 @@ def input_error(func):
         try:
             return func(*args)
         except IndexError:
-            return 'IndexError'
+            return 'IndexError: Enter valid number of arguments.'
         except ValueError:
-            return 'ValueError'
+            return 'ValueError: Enter valid phone or name.'
         except KeyError:
-            return 'KeyError'
+            return 'KeyError: Record does not exist.'
 
     return execute
 
@@ -39,10 +39,12 @@ def add_handler(addressbook: AddressBook, *args) -> str:
     phone = Phone(args[1]) if len(args) > 1 else None
     record = Record(name, phone)
     if name.value in addressbook.data:
-        addressbook[name.value].phones = phone
+        addressbook[name.value].add_phone(phone)
+        message = f'Phone {phone.value} was added to {name.value} record.'
     else:
         addressbook.add_record(record)
-    return 'Record added'
+        message = f'{name.value} record was added.'
+    return message
 
 
 @input_error
@@ -53,19 +55,24 @@ def show_handler(addressbook: AddressBook, *args) -> str:
 
 @input_error
 def change_handler(addressbook: AddressBook, *args) -> str:
-    del addressbook[args[0].capitalize()][Phone(args[1])]
-    addressbook[args[0].capitalize()].phones = Phone(args[2])
-    return 'Phone was changed'
+    name = args[0].capitalize()
+    old_phone = Phone(args[1])
+    new_phone = Phone(args[2])
+    addressbook[name].del_phone(old_phone)
+    addressbook[name].add_phone(new_phone)
+    return f'Phone in {name} record was changed from {old_phone.value} to {new_phone.value}.'
 
 
 @input_error
 def del_handler(addressbook: AddressBook, *args):
+    name = args[1].capitalize()
     if args[0].lower() == 'phone':
-        del addressbook[args[1].capitalize()][Phone(args[2])]
-        message = 'Phone Was removed'
+        phone = Phone(args[2])
+        addressbook[name].del_phone(phone)
+        message = f'Phone {phone.value} was removed from {name} record.'
     elif args[0].lower() == 'record':
-        addressbook.del_record(args[1].capitalize())
-        message = 'Record was removed'
+        addressbook.del_record(name)
+        message = f'{name} record was removed.'
     else:
         message = f"del does not support {args[0]} argument."
     return message

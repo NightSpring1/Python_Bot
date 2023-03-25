@@ -11,18 +11,13 @@ def main() -> None:
             continue
         command = input_string.split()[0].lower()
         arguments = input_string.split()[1:]
-
         if command in function:
             message = function[command](my_address_book, *arguments)
-
         elif input_string.lower() in ('good bye', 'exit', 'close'):
             message = 'Good bye!'
-
         else:
             message = f'Command {command} does not exist!'
-
         print(message)
-
         if message == 'Good bye!':
             break
 

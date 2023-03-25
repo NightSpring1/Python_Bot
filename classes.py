@@ -61,7 +61,10 @@ class Record:
         else:
             raise ValueError  # phone already exists
 
-    def __delitem__(self, key: Phone):
+    def add_phone(self, phone: Phone):
+        self.phones = phone
+
+    def del_phone(self, key: Phone):
         if key.value in self.phones:
             for phone in self.__phones:
                 if phone.value == key.value:
@@ -76,7 +79,7 @@ class AddressBook(UserDict):
         self.data[record.name.value] = record
 
     def del_record(self, name):
-        del self.data[name]
+        self.data.pop(name)
 
     def show_records(self) -> str:
         records = []
