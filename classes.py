@@ -62,10 +62,13 @@ class Record:
             raise ValueError  # phone already exists
 
     def __delitem__(self, key: Phone):
-        for phone in self.__phones:
-            if phone.value == key.value:
-                self.__phones.remove(phone)
-                break
+        if key.value in self.phones:
+            for phone in self.__phones:
+                if phone.value == key.value:
+                    self.__phones.remove(phone)
+                    break
+        else:
+            raise KeyError  # phone does not exist
 
 
 class AddressBook(UserDict):
