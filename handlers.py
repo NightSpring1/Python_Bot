@@ -1,4 +1,4 @@
-from classes import Name, Phone, Record, AddressBook
+from classes import Name, Phone, Birthday, Record, AddressBook
 
 
 def input_error(func):
@@ -8,9 +8,11 @@ def input_error(func):
         except IndexError:
             return 'IndexError: Enter valid number of arguments.'
         except ValueError:
-            return 'ValueError: Enter valid phone or name.'
+            return 'ValueError: Enter valid phone or name or birthday.'
         except KeyError:
             return 'KeyError: Record does not exist.'
+        except AttributeError:
+            return 'AttributeError'
 
     return execute
 
@@ -29,6 +31,7 @@ def help_message(*args) -> str:
     del phone "user name" "phone": removes specified phone from record
     del record "user name": removes record from address book
     show: shows all contacts (to be done with iterator in 11hw)
+    birthday "user name" "birthday": adds birthday to record (format: day-month-year). Changeable.
     '''
     return message
 
@@ -49,7 +52,11 @@ def add_handler(addressbook: AddressBook, *args) -> str:
 
 @input_error
 def show_handler(addressbook: AddressBook, *args) -> str:
-    message = addressbook.show_records()
+    message = ''
+    print(list(addressbook.show_records(records_per_page=3)))
+    for page_num, page in enumerate(addressbook.show_records(3), 1):
+        message += f'Page {page_num}:\n'
+        message += page
     return message
 
 
@@ -64,7 +71,7 @@ def change_handler(addressbook: AddressBook, *args) -> str:
 
 
 @input_error
-def del_handler(addressbook: AddressBook, *args):
+def del_handler(addressbook: AddressBook, *args) -> str:
     name = args[1].capitalize()
     if args[0].lower() == 'phone':
         phone = Phone(args[2])
@@ -78,9 +85,17 @@ def del_handler(addressbook: AddressBook, *args):
     return message
 
 
+@input_error
+def birthday_handler(addressbook: AddressBook, *args):
+    name = args[0].capitalize()
+    addressbook[name].add_birthday(Birthday(args[1]))
+    return f'Birthday updated for {name} record.'
+
+
 function = {'hello': welcome_message,
             'help': help_message,
             'add': add_handler,
             'show': show_handler,
             'change': change_handler,
-            'del': del_handler}
+            'del': del_handler,
+            'birthday': birthday_handler}
