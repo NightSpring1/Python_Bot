@@ -145,10 +145,9 @@ class AddressBook(UserDict):
             else:
                 birthday_string = ''
 
-            message += f'\t{record.name.value}:\t{", ".join(record.phones)}{birthday_string}.{index}\n'
+            message += f'\t{record.name.value}:\t{", ".join(record.phones)}{birthday_string}.\n'
 
             if index % records_per_page == 0:
                 yield message
                 message = ''
         yield message
-

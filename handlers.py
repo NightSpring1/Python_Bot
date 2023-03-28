@@ -53,8 +53,7 @@ def add_handler(addressbook: AddressBook, *args) -> str:
 @input_error
 def show_handler(addressbook: AddressBook, *args) -> str:
     message = ''
-    print(list(addressbook.show_records(records_per_page=3)))
-    for page_num, page in enumerate(addressbook.show_records(3), 1):
+    for page_num, page in enumerate(addressbook.show_records(records_per_page=3), 1):
         message += f'Page {page_num}:\n'
         message += page
     return message
