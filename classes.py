@@ -150,6 +150,9 @@ class AddressBook(UserDict):
             pickle.dump(self.data, fw)
 
     def read_from_file(self, filename):
-        with open(filename, "rb") as fr:
-            content = pickle.load(fr)
-            self.data.update(content)
+        try:
+            with open(filename, "rb") as fr:
+                content = pickle.load(fr)
+                self.data.update(content)
+        except FileNotFoundError:
+            pass

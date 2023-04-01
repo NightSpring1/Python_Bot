@@ -32,8 +32,8 @@ def help_message(*args) -> str:
     del record "user name": removes record from address book
     show: shows all contacts 
     birthday "user name" "birthday": adds birthday to record (format: day-month-year). Changeable.
-    save: saves all records to storage.dat
-    load: loads records from storage.dat
+    save: saves all records to storage1.dat
+    load: loads records from storage1.dat
     search "any number of keywords": searches keywords in records and shows records in which matches are found 
     '''
     return message
@@ -104,12 +104,12 @@ def search_handler(addressbook: AddressBook, *args):
 
 
 def save_data(addressbook: AddressBook, *args) -> str:
-    addressbook.save_records_to_file('storage.dat')
+    addressbook.save_records_to_file('storage1.dat')
     return "Records have been saved."
 
 
 def load_data(addressbook: AddressBook, *args) -> str:
-    addressbook.read_from_file('storage.dat')
+    addressbook.read_from_file('storage1.dat')
     return "Records have been loaded."
 
 
