@@ -18,6 +18,7 @@ def command_parser(addressbook: AddressBook, input_string) -> str:
 def main() -> None:
     print('Type "help" for list of commands.')
     my_address_book = AddressBook()
+    my_address_book.read_records_from_file('storage1.dat')
     while True:
         input_string = input('Enter Command: ')
         if not len(input_string):
@@ -25,6 +26,7 @@ def main() -> None:
         message = command_parser(my_address_book, input_string)
         print(message)
         if message == 'Good bye!':
+            my_address_book.save_records_to_file('storage1.dat')
             break
 
 

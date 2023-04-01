@@ -109,7 +109,7 @@ def save_data(addressbook: AddressBook, *args) -> str:
 
 
 def load_data(addressbook: AddressBook, *args) -> str:
-    addressbook.read_from_file('storage1.dat')
+    addressbook.read_records_from_file('storage1.dat')
     return "Records have been loaded."
 
 

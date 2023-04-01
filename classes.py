@@ -149,7 +149,7 @@ class AddressBook(UserDict):
         with open(filename, "wb") as fw:
             pickle.dump(self.data, fw)
 
-    def read_from_file(self, filename):
+    def read_records_from_file(self, filename):
         try:
             with open(filename, "rb") as fr:
                 content = pickle.load(fr)
