@@ -30,8 +30,11 @@ def help_message(*args) -> str:
     change "user name" "old phone" "new phone": change existing number to a new one
     del phone "user name" "phone": removes specified phone from record
     del record "user name": removes record from address book
-    show: shows all contacts (to be done with iterator in 11hw)
+    show: shows all contacts 
     birthday "user name" "birthday": adds birthday to record (format: day-month-year). Changeable.
+    save: saves all records to storage.dat
+    load: loads records from storage.dat
+    search "any number of keywords": searches keywords in records and shows records in which matches are found 
     '''
     return message
 
@@ -53,7 +56,7 @@ def add_handler(addressbook: AddressBook, *args) -> str:
 @input_error
 def show_handler(addressbook: AddressBook, *args) -> str:
     message = ''
-    for page_num, page in enumerate(addressbook.show_records(records_per_page=3), 1):
+    for page_num, page in enumerate(addressbook.show_records(records_per_page=5), 1):
         message += f'Page {page_num}:\n'
         message += page
     return message
@@ -91,10 +94,32 @@ def birthday_handler(addressbook: AddressBook, *args):
     return f'Birthday updated for {name} record.'
 
 
+@input_error
+def search_handler(addressbook: AddressBook, *args):
+    search_string = '|'.join(args)
+    message = f'Searching words {", ".join(args)} in records:\n'
+    for page_num, page in enumerate(addressbook.show_records(search_pattern=search_string), 1):
+        message += page
+    return message
+
+
+def save_data(addressbook: AddressBook, *args) -> str:
+    addressbook.save_records_to_file('storage.dat')
+    return "Records have been saved."
+
+
+def load_data(addressbook: AddressBook, *args) -> str:
+    addressbook.read_from_file('storage.dat')
+    return "Records have been loaded."
+
+
 function = {'hello': welcome_message,
             'help': help_message,
             'add': add_handler,
             'show': show_handler,
             'change': change_handler,
             'del': del_handler,
-            'birthday': birthday_handler}
+            'birthday': birthday_handler,
+            'search': search_handler,
+            'save': save_data,
+            'load': load_data}

@@ -1,4 +1,5 @@
 import re
+import pickle
 from datetime import date
 from collections import UserDict
 
@@ -32,7 +33,7 @@ class Phone:
     @value.setter
     def value(self, value: str):
         if len(value) >= 9:
-            value = '+380' + ''.join(re.findall(r"[0-9]", value))[-9:]
+            value = '+380' + ''.join(re.findall(r'[0-9]', value))[-9:]
             self.__value = value
         else:
             raise ValueError  # phone has not enough digits
@@ -49,7 +50,7 @@ class Birthday:
 
     @value.setter
     def value(self, value):
-        b_day = value.split('-')
+        b_day = re.split(r"[-|_|\\|/]", value)
         birthday_day = date(day=int(b_day[0]), month=int(b_day[1]), year=int(b_day[2]))
         if (date.today() - birthday_day).days > 0:  # birthday cannot be tomorrow
             self.__value = birthday_day
@@ -71,7 +72,7 @@ class Record:
 
     @property
     def phones(self):
-        return set(map(lambda x: x.value, self.__phones))
+        return self.__phones
 
     @phones.setter
     def phones(self, phone: Phone):
@@ -84,7 +85,7 @@ class Record:
 
     @property
     def birthday(self):
-        return self.__birthday.value.strftime("%d-%m-%Y") if self.__birthday is not None else None
+        return self.__birthday
 
     @birthday.setter
     def birthday(self, birthday: Birthday):
@@ -106,25 +107,17 @@ class Record:
         self.birthday = birthday
 
     def days_to_birthday(self):
-        if self.birthday is None:
+        if self.birthday.value is None:
             days_to_birthday = None
         else:
             today = date.today()
             try:
-                td_this_year = date(today.year,
-                                    self.__birthday.value.month,
-                                    self.__birthday.value.day)
-                td_next_year = date(today.year + 1,
-                                    self.__birthday.value.month,
-                                    self.__birthday.value.day)
+                td_this_year = self.__birthday.value.replace(year=today.year)
+                td_next_year = self.__birthday.value.replace(year=today.year + 1)
             except ValueError:  # leap year
-                td_this_year = date(today.year,
-                                    self.__birthday.value.month,
-                                    self.__birthday.value.day - 1)
-                td_next_year = date(today.year + 1,
-                                    self.__birthday.value.month,
-                                    self.__birthday.value.day - 1)
-            days_to_birthday = ((td_this_year if td_this_year > today else td_next_year) - today).days
+                td_this_year = self.__birthday.value.replace(year=today.year, day=self.__birthday.value.day - 1)
+                td_next_year = self.__birthday.value.replace(year=today.year + 1, day=self.__birthday.value.day - 1)
+            days_to_birthday = ((td_this_year if td_this_year >= today else td_next_year) - today).days
         return days_to_birthday
 
 
@@ -136,18 +129,27 @@ class AddressBook(UserDict):
     def del_record(self, name):
         self.data.pop(name)
 
-    def show_records(self, records_per_page: int = 10) -> str:
+    def show_records(self, records_per_page: int = 1, search_pattern: str = '') -> str:
         message = ''
-        for index, record in enumerate(self.data.values(), 1):
-
-            if record.birthday is not None:
-                birthday_string = f'; birthday: {record.birthday} (in {record.days_to_birthday()} days)'
-            else:
-                birthday_string = ''
-
-            message += f'\t{record.name.value}:\t{", ".join(record.phones)}{birthday_string}.\n'
-
-            if index % records_per_page == 0:
+        num_of_record = 0
+        for name, record in self.data.items():
+            num_of_record += 1
+            phones_output = ", ".join(list(map(lambda x: x.value, record.phones)))
+            birthday_output = record.birthday.value.strftime("%d-%m-%Y") if record.birthday is not None else ""
+            days_to_birthday = record.days_to_birthday() if record.birthday is not None else ""
+            search_string = f'{num_of_record}) {name}, {phones_output}, {birthday_output} {days_to_birthday}\n'
+            if re.search(search_pattern, search_string, flags=re.IGNORECASE) is not None:
+                message += search_string
+            if num_of_record % records_per_page == 0:
                 yield message
                 message = ''
         yield message
+
+    def save_records_to_file(self, filename):
+        with open(filename, "wb") as fw:
+            pickle.dump(self.data, fw)
+
+    def read_from_file(self, filename):
+        with open(filename, "rb") as fr:
+            content = pickle.load(fr)
+            self.data.update(content)
