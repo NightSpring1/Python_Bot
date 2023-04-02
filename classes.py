@@ -139,10 +139,14 @@ class AddressBook(UserDict):
             phones_output = ", ".join([phone.value for phone in record.phones])
             birthday_output = record.birthday.value.strftime("%d-%m-%Y") if record.birthday else "-"
             days_to_birthday = record.days_to_birthday() if record.birthday else ""
-            # Makes  final string
+            # Makes final string
             search_string = f'{record_count+1}) {name}, {phones_output}, {birthday_output} {days_to_birthday}\n'
             # Searching if there are any matches according to search pattern
-            if re.search(search_pattern, search_string, flags=re.IGNORECASE):
+            if search_pattern != '':
+                if re.search(search_pattern, search_string, flags=re.IGNORECASE):
+                    output.append(search_string)
+                    record_count += 1
+            else:
                 output.append(search_string)
                 record_count += 1
             # return string with records_per_page records
