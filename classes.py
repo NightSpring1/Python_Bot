@@ -130,20 +130,28 @@ class AddressBook(UserDict):
         self.data.pop(name)
 
     def show_records(self, records_per_page: int = 1, search_pattern: str = '') -> str:
-        message = ''
-        num_of_record = 0
-        for name, record in self.data.items():
-            num_of_record += 1
-            phones_output = ", ".join(list(map(lambda x: x.value, record.phones)))
-            birthday_output = record.birthday.value.strftime("%d-%m-%Y") if record.birthday is not None else ""
-            days_to_birthday = record.days_to_birthday() if record.birthday is not None else ""
-            search_string = f'{num_of_record}) {name}, {phones_output}, {birthday_output} {days_to_birthday}\n'
-            if re.search(search_pattern, search_string, flags=re.IGNORECASE) is not None:
-                message += search_string
-            if num_of_record % records_per_page == 0:
-                yield message
-                message = ''
-        yield message
+
+        output = []
+        record_count = 0
+        for record in self.data.values():
+            # Creates strings for each field
+            name = record.name.value
+            phones_output = ", ".join([phone.value for phone in record.phones])
+            birthday_output = record.birthday.value.strftime("%d-%m-%Y") if record.birthday else "-"
+            days_to_birthday = record.days_to_birthday() if record.birthday else ""
+            # Makes  final string
+            search_string = f'{record_count+1}) {name}, {phones_output}, {birthday_output} {days_to_birthday}\n'
+            # Searching if there are any matches according to search pattern
+            if re.search(search_pattern, search_string, flags=re.IGNORECASE):
+                output.append(search_string)
+                record_count += 1
+            # return string with records_per_page records
+            if record_count % records_per_page == 0:
+                yield ''.join(output)
+                output = []
+        # return last page if it is not complete
+        if output:
+            yield ''.join(output)
 
     def save_records_to_file(self, filename):
         with open(filename, "wb") as fw:
