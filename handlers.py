@@ -5,14 +5,14 @@ def input_error(func):
     def execute(*args):
         try:
             return func(*args)
-        except IndexError:
-            return 'IndexError: Enter valid number of arguments.'
-        except ValueError:
-            return 'ValueError: Enter valid phone or name or birthday.'
-        except KeyError:
-            return 'KeyError: Record does not exist.'
-        except AttributeError:
-            return 'AttributeError'
+        except IndexError as index_error:
+            return index_error
+        except ValueError as value_error:
+            return value_error
+        except KeyError as key_error:
+            return key_error
+        except AttributeError as attribute_error:
+            return attribute_error
 
     return execute
 
@@ -44,12 +44,12 @@ def add_handler(addressbook: AddressBook, *args) -> str:
     name = Name(args[0])
     phone = Phone(args[1]) if len(args) > 1 else None
     record = Record(name, phone)
-    if name.value in addressbook.data:
-        addressbook[name.value].add_phone(phone)
-        message = f'Phone {phone.value} was added to {name.value} record.'
+    if name.name in addressbook.data:
+        addressbook[name.name].add_phone(phone)
+        message = f'Phone {phone} was added to {name} record.'
     else:
         addressbook.add_record(record)
-        message = f'{name.value} record was added.'
+        message = f'{name} record was added.'
     return message
 
 
@@ -64,22 +64,25 @@ def show_handler(addressbook: AddressBook, *args) -> str:
 
 @input_error
 def change_handler(addressbook: AddressBook, *args) -> str:
+    if len(args) < 3:
+        return 'Not enough arguments'
     name = args[0].capitalize()
     old_phone = Phone(args[1])
     new_phone = Phone(args[2])
     addressbook[name].del_phone(old_phone)
     addressbook[name].add_phone(new_phone)
-    return f'Phone in {name} record was changed from {old_phone.value} to {new_phone.value}.'
+    return f'Phone in {name} record was changed from {old_phone} to {new_phone}.'
 
 
 @input_error
 def del_handler(addressbook: AddressBook, *args) -> str:
-    name = args[1].capitalize()
     if args[0].lower() == 'phone':
+        name = args[1].capitalize()
         phone = Phone(args[2])
         addressbook[name].del_phone(phone)
-        message = f'Phone {phone.value} was removed from {name} record.'
+        message = f'Phone {phone} was removed from {name} record.'
     elif args[0].lower() == 'record':
+        name = args[1].capitalize()
         addressbook.del_record(name)
         message = f'{name} record was removed.'
     else:
@@ -90,7 +93,7 @@ def del_handler(addressbook: AddressBook, *args) -> str:
 @input_error
 def birthday_handler(addressbook: AddressBook, *args):
     name = args[0].capitalize()
-    addressbook[name].add_birthday(Birthday(args[1]))
+    addressbook[name].set_birthday(Birthday(args[1]))
     return f'Birthday updated for {name} record.'
 
 

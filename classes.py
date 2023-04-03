@@ -5,83 +5,97 @@ from collections import UserDict
 
 
 class Name:
-    def __init__(self, value):
-        self.__value = None
-        self.value = value
+    def __init__(self, name: str):
+        self._name = None
+        self.name = name
 
     @property
-    def value(self):
-        return self.__value
+    def name(self) -> str:
+        return self._name
 
-    @value.setter
-    def value(self, value: str):
-        if value.isalpha() and len(value) in range(2, 16):
-            self.__value = value.capitalize()
+    @name.setter
+    def name(self, value: str):
+        if len(value) in range(2, 16) and value.isalpha():
+            self._name = value.capitalize()
         else:
-            raise ValueError  # invalid name
+            raise ValueError('Name must contain only letters and be between 2 and 15 characters long')
+
+    def __str__(self):
+        return self._name
 
 
 class Phone:
-    def __init__(self, value):
-        self.__value = None
-        self.value = value
+    def __init__(self, number: str):
+        self._number = None
+        self.number = number
 
     @property
-    def value(self):
-        return self.__value
+    def number(self) -> str:
+        return self._number
 
-    @value.setter
-    def value(self, value: str):
-        if len(value) >= 9:
-            value = '+380' + ''.join(re.findall(r'[0-9]', value))[-9:]
-            self.__value = value
+    @number.setter
+    def number(self, value: str):
+        digits = ''.join(re.findall(r'\d', value))
+        if len(digits) >= 9:
+            self._number = '+380' + digits[-9:]
         else:
-            raise ValueError  # phone has not enough digits
+            raise ValueError('Phone number must have at least 9 digits')
+
+    def __eq__(self, other: object) -> bool:
+        return self.number == other.number
+
+    def __str__(self):
+        return self._number
 
 
 class Birthday:
-    def __init__(self, value):
-        self.__value = None
-        self.value = value
+    def __init__(self, date_str: str):
+        self._date = None
+        self.date_str = date_str
 
     @property
-    def value(self):
-        return self.__value
+    def date_str(self) -> str:
+        return self._date.strftime("%d-%m-%Y")
 
-    @value.setter
-    def value(self, value):
-        b_day = re.split(r"[-|_|\\|/]", value)
-        birthday_day = date(day=int(b_day[0]), month=int(b_day[1]), year=int(b_day[2]))
-        if (date.today() - birthday_day).days > 0:  # birthday cannot be tomorrow
-            self.__value = birthday_day
-        else:
-            raise ValueError
+    @date_str.setter
+    def date_str(self, value: str):
+        day, month, year = map(int, re.split(r"[-|_|\\|/]", value))
+        birthday = date(year, month, day)
+        if birthday >= date.today():
+            raise ValueError(f'Birthday must be in the past')
+        self._date = birthday
+
+    @property
+    def date(self) -> date:
+        return self._date
+
+    def __repr__(self) -> str:
+        return self.date_str
 
 
 class Record:
     def __init__(self, name: Name, phone: Phone = None, birthday: Birthday = None):
-        self.__name = name
-        self.__phones = set()
-        self.__birthday = None
-        self.phones = phone
+        self.name = name
+        self.phones = []
         self.birthday = birthday
+        if phone:
+            self.add_phone(phone)
 
     @property
     def name(self):
         return self.__name
+
+    @name.setter
+    def name(self, name: Name):
+        self.__name = name
 
     @property
     def phones(self):
         return self.__phones
 
     @phones.setter
-    def phones(self, phone: Phone):
-        if phone is None:
-            pass
-        elif phone.value not in self.phones:
-            self.__phones.add(phone)
-        else:
-            raise ValueError  # phone already exists
+    def phones(self, phones):
+        self.__phones = phones
 
     @property
     def birthday(self):
@@ -92,52 +106,54 @@ class Record:
         self.__birthday = birthday
 
     def add_phone(self, phone: Phone):
-        self.phones = phone
-
-    def del_phone(self, key: Phone):
-        if key.value in self.phones:
-            for phone in self.__phones:
-                if phone.value == key.value:
-                    self.__phones.remove(phone)
-                    break
+        if phone not in self.phones:
+            self.phones.append(phone)
         else:
-            raise KeyError  # phone does not exist
+            raise ValueError(f"Phone {phone} already exists in {self.name} record")
 
-    def add_birthday(self, birthday: Birthday):
+    def del_phone(self, phone: Phone):
+        if phone in self.phones:
+            self.phones.remove(phone)
+        else:
+            raise KeyError(f"Phone {phone} does not exist in {self.name} record")
+
+    def set_birthday(self, birthday: Birthday):
         self.birthday = birthday
 
     def days_to_birthday(self):
-        if self.birthday.value is None:
-            days_to_birthday = None
-        else:
-            today = date.today()
-            try:
-                td_this_year = self.__birthday.value.replace(year=today.year)
-                td_next_year = self.__birthday.value.replace(year=today.year + 1)
-            except ValueError:  # leap year
-                td_this_year = self.__birthday.value.replace(year=today.year, day=self.__birthday.value.day - 1)
-                td_next_year = self.__birthday.value.replace(year=today.year + 1, day=self.__birthday.value.day - 1)
-            days_to_birthday = ((td_this_year if td_this_year >= today else td_next_year) - today).days
+        if not self.birthday:
+            return None
+        today = date.today()
+        try:
+            bday_this_year = self.birthday.date.replace(year=today.year)
+        except ValueError:
+            bday_this_year = self.birthday.date.replace(year=today.year, day=today.day - 1)
+        if bday_this_year < today:
+            bday_this_year = self.birthday.date.replace(year=today.year + 1)
+
+        days_to_birthday = (bday_this_year - today).days
         return days_to_birthday
 
 
 class AddressBook(UserDict):
 
     def add_record(self, record: Record):
-        self.data[record.name.value] = record
+        self.data[record.name.name] = record
 
     def del_record(self, name):
-        self.data.pop(name)
+        if name in self.data:
+            self.data.pop(name)
+        else:
+            raise KeyError(f'Record with name {name} does not exist')
 
     def show_records(self, records_per_page: int = 1, search_pattern: str = '') -> str:
-
         output = []
         record_count = 0
         for record in self.data.values():
             # Creates strings for each field
-            name = record.name.value
-            phones_output = ", ".join([phone.value for phone in record.phones])
-            birthday_output = record.birthday.value.strftime("%d-%m-%Y") if record.birthday else "-"
+            name = record.name
+            phones_output = ", ".join(list(map(str, record.phones)))
+            birthday_output = record.birthday.date_str if record.birthday else "-"
             days_to_birthday = record.days_to_birthday() if record.birthday else ""
             # Makes final string
             search_string = f'{record_count+1}) {name}, {phones_output}, {birthday_output} {days_to_birthday}\n'
